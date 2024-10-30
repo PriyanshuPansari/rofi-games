@@ -2,6 +2,7 @@ use config::read_config;
 use lib_game_detector::{
     data::{Game, Games},
     get_detector,
+    data::SupportedLaunchers
 };
 use rofi_mode::{Action, Event};
 use std::process::{self, Command};
@@ -76,12 +77,15 @@ impl<'rofi> rofi_mode::Mode<'rofi> for Mode<'rofi> {
             .with(EnvFilter::from_default_env())
             .init();
 
-        let mut entries = get_detector().get_all_detected_games();
+        // Get games from Lutris and unwrap the Option
+        let mut entries = get_detector()
+            .get_all_detected_games_from_specific_launcher(SupportedLaunchers::Lutris)
+            .unwrap_or_default();
 
-        // Add custom entries from config
+        // Add custom entries from config if available
         if let Some(config) = read_config() {
             entries = add_custom_entries(&entries, config);
-        };
+        }
 
         // Filter out entries without box art
         entries = entries
